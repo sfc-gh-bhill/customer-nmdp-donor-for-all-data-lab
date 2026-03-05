@@ -1,96 +1,97 @@
 /*=============================================================================
-  LSC Donor for All Data Lab -- Participant Teardown
+  LSC Donor for All Data Lab — Teardown / Cleanup Script
   =============================================================================
   
-  Removes YOUR per-user lab artifacts from the Snowflake account.
-  Run this when you are finished with the lab to clean up your resources.
-
-  WARNING: This script is DESTRUCTIVE and IRREVERSIBLE.
-  All YOUR objects (DTs, models, agents, search services, Streamlit apps)
-  will be permanently deleted.
+  Removes ALL lab artifacts from your Snowflake account.
+  Run this when you are finished with the lab to clean up resources.
   
-  WHAT THIS REMOVES (your per-user schema and everything in it):
+  WARNING: This script is DESTRUCTIVE and IRREVERSIBLE.
+  All data, models, agents, and objects will be permanently deleted.
+  
+  What this removes:
     - Streamlit App:  CELL_THERAPY_COMPASS
     - Agent:          MARROWCO_RESEARCH_AGENT
     - ML Model:       GVHD_RISK_MODEL
     - Semantic View:  MARROWCO_TRANSPLANT_ANALYTICS
     - Search Service: CLINICAL_NOTES_SEARCH
     - Dynamic Tables: DT_GVHD_ANALYTICS, DT_TRANSPLANT_ENRICHED
-    - Tables:         ML_PREDICTIONS, ML_TRAINING_DATA
-    - Schema:         MARROWCO_DONOR_LAB.HOL_USER_<NN>
-
-  WHAT THIS DOES NOT REMOVE (admin-managed shared resources):
+    - Tables:         ML_PREDICTIONS, ML_TRAINING_DATA, CLINICAL_NOTES, 
+                      TRANSPLANT_OUTCOMES
+    - Stage:          DATA_STAGE
+    - File Format:    CSV_FORMAT
+    - Schema:         MARROWCO_DONOR_LAB.HOL
     - Database:       MARROWCO_DONOR_LAB
-    - Shared Schema:  MARROWCO_DONOR_LAB.HOL (base tables, stage, file format)
-    - Warehouse:      MARROWCO_HOL_WH_<NN> (admin removes via 00_admin_teardown.sql)
-    - Role:           MARROWCO_HOL_ROLE_<NN> (admin removes via 00_admin_teardown.sql)
-
-  FOR FULL TEARDOWN (admin only):
-    Run 00_admin_teardown.sql to remove ALL user environments and shared infra.
+    - Warehouse:      MARROWCO_HOL_WH
+    - Role:           MARROWCO_HOL_ROLE
   =============================================================================*/
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SET YOUR USER NUMBER (assigned by the lab admin)
+-- STEP 1: Switch to ACCOUNTADMIN
 -- ════════════════════════════════════════════════════════════════════════════
-SET USER_NUM = '01';  -- << CHANGE THIS TO YOUR ASSIGNED NUMBER (01-20)
-
-USE ROLE IDENTIFIER('MARROWCO_HOL_ROLE_' || $USER_NUM);
-USE WAREHOUSE IDENTIFIER('MARROWCO_HOL_WH_' || $USER_NUM);
+USE ROLE ACCOUNTADMIN;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- STEP 1: Drop AI/ML Objects (before dropping schema)
+-- STEP 2: Drop AI/ML Objects (must drop before schema/database)
 -- ════════════════════════════════════════════════════════════════════════════
-
-USE SCHEMA IDENTIFIER('MARROWCO_DONOR_LAB.HOL_USER_' || $USER_NUM);
 
 -- Agent
-DROP AGENT IF EXISTS MARROWCO_RESEARCH_AGENT;
+DROP AGENT IF EXISTS MARROWCO_DONOR_LAB.HOL.MARROWCO_RESEARCH_AGENT;
 
 -- ML Model
-DROP MODEL IF EXISTS GVHD_RISK_MODEL;
+DROP MODEL IF EXISTS MARROWCO_DONOR_LAB.HOL.GVHD_RISK_MODEL;
 
 -- Semantic View
-DROP SEMANTIC VIEW IF EXISTS MARROWCO_TRANSPLANT_ANALYTICS;
+DROP SEMANTIC VIEW IF EXISTS MARROWCO_DONOR_LAB.HOL.MARROWCO_TRANSPLANT_ANALYTICS;
 
 -- Cortex Search Service
-DROP CORTEX SEARCH SERVICE IF EXISTS CLINICAL_NOTES_SEARCH;
+DROP CORTEX SEARCH SERVICE IF EXISTS MARROWCO_DONOR_LAB.HOL.CLINICAL_NOTES_SEARCH;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- STEP 2: Drop Dynamic Tables
+-- STEP 3: Drop Dynamic Tables
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- Gold layer first (depends on Silver)
-DROP DYNAMIC TABLE IF EXISTS DT_GVHD_ANALYTICS;
+DROP DYNAMIC TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.DT_GVHD_ANALYTICS;
 
 -- Silver layer
-DROP DYNAMIC TABLE IF EXISTS DT_TRANSPLANT_ENRICHED;
+DROP DYNAMIC TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.DT_TRANSPLANT_ENRICHED;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- STEP 3: Drop ML Tables
+-- STEP 4: Drop Tables
 -- ════════════════════════════════════════════════════════════════════════════
 
-DROP TABLE IF EXISTS ML_PREDICTIONS;
-DROP TABLE IF EXISTS ML_TRAINING_DATA;
+DROP TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.ML_PREDICTIONS;
+DROP TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.ML_TRAINING_DATA;
+DROP TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.CLINICAL_NOTES;
+DROP TABLE IF EXISTS MARROWCO_DONOR_LAB.HOL.TRANSPLANT_OUTCOMES;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- STEP 4: Drop Streamlit App
+-- STEP 5: Drop Stage and File Format
 -- ════════════════════════════════════════════════════════════════════════════
 
-DROP STREAMLIT IF EXISTS CELL_THERAPY_COMPASS;
+DROP STAGE IF EXISTS MARROWCO_DONOR_LAB.HOL.DATA_STAGE;
+DROP FILE FORMAT IF EXISTS MARROWCO_DONOR_LAB.HOL.CSV_FORMAT;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- STEP 5: Drop your per-user schema (CASCADE removes anything remaining)
+-- STEP 6: Drop Database (cascades schema and any remaining objects)
 -- ════════════════════════════════════════════════════════════════════════════
 
-DROP SCHEMA IF EXISTS IDENTIFIER('MARROWCO_DONOR_LAB.HOL_USER_' || $USER_NUM) CASCADE;
+DROP DATABASE IF EXISTS MARROWCO_DONOR_LAB;
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- STEP 7: Drop Warehouse
+-- ════════════════════════════════════════════════════════════════════════════
+
+DROP WAREHOUSE IF EXISTS MARROWCO_HOL_WH;
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- STEP 8: Drop Role
+-- ════════════════════════════════════════════════════════════════════════════
+
+DROP ROLE IF EXISTS MARROWCO_HOL_ROLE;
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Verify Cleanup
 -- ════════════════════════════════════════════════════════════════════════════
 
-SELECT 'Participant ' || $USER_NUM || ' teardown complete -- all your lab artifacts removed.' AS STATUS;
-
--- ════════════════════════════════════════════════════════════════════════════
--- NOTE: Your role, warehouse, and shared data are managed by the lab admin.
--- The admin will run 00_admin_teardown.sql to clean up those resources.
--- ════════════════════════════════════════════════════════════════════════════
+SELECT 'Teardown complete — all lab artifacts removed.' AS STATUS;

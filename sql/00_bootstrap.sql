@@ -1,18 +1,12 @@
 /*=============================================================================
-  LSC Donor for All Data Lab -- Bootstrap Infrastructure (Shared Objects)
+  LSC Donor for All Data Lab — Bootstrap Infrastructure
   =============================================================================
-  Run this script FIRST to create shared Snowflake infrastructure.
+  Run this script FIRST to create all Snowflake infrastructure.
   Idempotent: safe to run multiple times.
-
-  NOTE FOR MULTI-USER LABS:
-    If running with multiple participants (5-20), run 00_admin_provision.sql
-    INSTEAD of this script. That script creates both shared infrastructure
-    AND per-user isolated environments.
-
-    This script is for single-user testing or development only.
   
   Prerequisites:
     - ACCOUNTADMIN role (or equivalent with CREATE DATABASE/ROLE/WAREHOUSE)
+    - AWS US-East-1 region (or cross-region calling enabled)
   
   What this creates:
     - Role:      MARROWCO_HOL_ROLE
@@ -52,7 +46,7 @@ GRANT OPERATE ON WAREHOUSE MARROWCO_HOL_WH TO ROLE MARROWCO_HOL_ROLE;
 -- ║ STEP 3: Create Database and Schema                                       ║
 -- ╚═══════════════════════════════════════════════════════════════════════════╝
 CREATE DATABASE IF NOT EXISTS MARROWCO_DONOR_LAB
-    COMMENT = 'LSC Donor for All Data Lab -- Forecasting GVHD with Snowflake Intelligence';
+    COMMENT = 'LSC Donor for All Data Lab — Forecasting GVHD with Snowflake Intelligence';
 
 GRANT OWNERSHIP ON DATABASE MARROWCO_DONOR_LAB TO ROLE MARROWCO_HOL_ROLE
     COPY CURRENT GRANTS;
@@ -90,7 +84,6 @@ CREATE FILE FORMAT IF NOT EXISTS CSV_FORMAT
 -- ╔═══════════════════════════════════════════════════════════════════════════╗
 -- ║ STEP 6: Grant Required Privileges                                        ║
 -- ╚═══════════════════════════════════════════════════════════════════════════╝
-USE ROLE ACCOUNTADMIN;
 
 -- Database-level grants
 GRANT CREATE TABLE ON SCHEMA MARROWCO_DONOR_LAB.HOL TO ROLE MARROWCO_HOL_ROLE;
@@ -123,13 +116,9 @@ GRANT CREATE MODEL ON SCHEMA MARROWCO_DONOR_LAB.HOL TO ROLE MARROWCO_HOL_ROLE;
 -- ╔═══════════════════════════════════════════════════════════════════════════╗
 -- ║ STEP 7: Verify Setup                                                     ║
 -- ╚═══════════════════════════════════════════════════════════════════════════╝
-USE ROLE MARROWCO_HOL_ROLE;
-USE WAREHOUSE MARROWCO_HOL_WH;
-USE SCHEMA MARROWCO_DONOR_LAB.HOL;
-
 SELECT 
     CURRENT_ROLE() AS ROLE,
     CURRENT_WAREHOUSE() AS WAREHOUSE,
     CURRENT_DATABASE() AS DATABASE,
     CURRENT_SCHEMA() AS SCHEMA,
-    'Bootstrap complete -- infrastructure ready!' AS STATUS;
+    '✅ Bootstrap complete — infrastructure ready!' AS STATUS;
