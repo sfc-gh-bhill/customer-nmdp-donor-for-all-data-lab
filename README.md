@@ -338,7 +338,13 @@ Recap what was built:
 
 ## Cleanup
 
-To remove all lab artifacts:
+To remove all lab artifacts, run the full teardown script:
+
+📄 **File:** [`sql/10_teardown.sql`](sql/10_teardown.sql)
+
+This drops all objects in the correct dependency order: Agent, ML Model, Semantic View, Search Service, Dynamic Tables, Tables, Stage, Database, Warehouse, and Role.
+
+**Quick cleanup** (if you just want the essentials):
 
 ```sql
 USE ROLE ACCOUNTADMIN;
@@ -361,4 +367,14 @@ DROP ROLE IF EXISTS MARROWCO_HOL_ROLE;
 
 **Presenter:** Braedon Hill, Sr. Solution Engineer — The Winter Cloud Platform
 
-*This lab was built for the LSC team to demonstrate how The Winter Cloud Platform AI Data Cloud can unify transplant outcome data, clinical intelligence, and predictive analytics into a single governed platform supporting the "Donor for All" mission.*
+*This lab was built to demonstrate how The Winter Cloud Platform AI Data Cloud can unify transplant outcome data, clinical intelligence, and predictive analytics into a single governed platform supporting the "Donor for All" mission.*
+
+---
+
+## Legal Disclaimer
+
+This project is the independent work of **Braedon Hill** and does not represent, reflect, or imply endorsement by any organization, employer, or third party. The views and content expressed in this repository are solely those of the author.
+
+**All data used in this project is entirely synthetic.** Synthetic datasets were generated using Snowflake's synthetic data generation capabilities (Cortex AI functions). Where real-world reference data was used for structure or schema design, it was obtained exclusively from publicly available sources. **No real patient data, proprietary datasets, or confidential information of any kind is included in this repository.**
+
+This project is provided "as is" without warranty of any kind, express or implied. The author assumes no liability for any use or misuse of the materials contained herein. This project is intended solely for educational and demonstration purposes.
